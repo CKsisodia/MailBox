@@ -6,37 +6,52 @@ const mailBoxSlice = createSlice({
   initialState: {
     inBox: [],
     sentBox: [],
-    sendData: undefined,
-    receiveData: undefined,
+    messageBox:false,
+    mailContent:undefined,
   },
-  reducers: {},
+  reducers: {
+    messageBoxOpen(state,action){
+      state.messageBox = true;
+      state.mailContent = action.payload;
+    },
+    messageBoxClose(state,action){
+      state.messageBox = false;
+    },
+
+  },
   extraReducers: (builder) => {
     builder.addCase(getMailAction.fulfilled, (state, action) => {
-      const mailData = action.payload;
-      console.log("at slice", mailData);
+      const getMailData = action.payload;
+      console.log("at slice", getMailData);
 
       const inboxArr = [];
 
-      for (const key in mailData.inbox) {
+      for (const key in getMailData.inbox) {
         inboxArr.push({
-          id:mailData.inbox[key].id,
-          mailContent: mailData.inbox[key].mailContent,
-          receiverEmail: mailData.inbox[key].receiverEmail,
-          senderEmail: mailData.inbox[key].senderEmail,
-          subject: mailData.inbox[key].subject,
+          id:getMailData.inbox[key].id,
+          key:key,
+          DateAndTime:getMailData.inbox[key].DateAndTime,
+          mailContent: getMailData.inbox[key].mailContent,
+          receiverEmail: getMailData.inbox[key].receiverEmail,
+          senderEmail: getMailData.inbox[key].senderEmail,
+          subject: getMailData.inbox[key].subject,
+          isInboxMessageRead: getMailData.inbox[key].isInboxMessageRead,
+
         });
       }
       console.log("inbox array in slice", inboxArr);
       state.inBox = inboxArr;
 
       const sentBoxArr = [];
-      for (const key in mailData.sentbox) {
+      for (const key in getMailData.sentbox) {
         sentBoxArr.push({
-          id:mailData.sentbox[key].id,
-          mailContent: mailData.sentbox[key].mailContent,
-          receiverEmail: mailData.sentbox[key].receiverEmail,
-          senderEmail: mailData.sentbox[key].senderEmail,
-          subject: mailData.sentbox[key].subject,
+          id:getMailData.sentbox[key].id,
+          key:key,
+          DateAndTime:getMailData.sentbox[key].DateAndTime,
+          mailContent: getMailData.sentbox[key].mailContent,
+          receiverEmail: getMailData.sentbox[key].receiverEmail,
+          senderEmail: getMailData.sentbox[key].senderEmail,
+          subject: getMailData.sentbox[key].subject,
         });
       }
       console.log("sentbox array in slice", sentBoxArr);

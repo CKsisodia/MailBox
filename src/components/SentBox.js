@@ -16,7 +16,15 @@ import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useSelector } from "react-redux";
+import Button from "@mui/material/Button";
+
+import { useDispatch, useSelector } from "react-redux";
+import {
+  deleteSentboxMailAction,
+  getMailAction,
+} from "../reducer/asyncMailBox";
+import { mailBoxAction } from "../reducer/mailBoxSlice";
+import MessageBox from "./MessageBox";
 
 function EnhancedTableHead(props) {
   const { onSelectAllClick, numSelected, rowCount } = props;
@@ -83,13 +91,13 @@ function EnhancedTableToolbar(props) {
         </Typography>
       )}
 
-      {numSelected > 0 ? (
+      {/* {numSelected > 0 ? (
         <Tooltip title="Delete">
           <IconButton>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
-      ) : null}
+      ) : null} */}
     </Toolbar>
   );
 }
@@ -99,11 +107,14 @@ EnhancedTableToolbar.propTypes = {
 };
 
 export default function SentBox() {
+  const dispatch = useDispatch();
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   const sentboxData = useSelector((state) => state.mailBox.sentBox);
+  const myEmail = useSelector((state) => state.user.getUserData);
+  const messageBoxOpen = useSelector((state) => state.mailBox.messageBox);
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
@@ -148,6 +159,20 @@ export default function SentBox() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - sentboxData.length) : 0;
 
+  const sentboxDeleteHandler = (key) => {
+    dispatch(deleteSentboxMailAction({ key: key, senderEmail: myEmail.email }));
+
+    const interval = setInterval(() => {
+      dispatch(getMailAction(myEmail.email));
+     }, 2000);
+
+     return () => clearInterval(interval);
+  };
+
+  const messageSentBoxHandler = (sentData) => {
+    dispatch(mailBoxAction.messageBoxOpen(sentData));
+  };
+
   return (
     <Box sx={{ width: "100%" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
@@ -166,25 +191,24 @@ export default function SentBox() {
             <TableBody>
               {sentboxData
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => {
-                  const isItemSelected = isSelected(row.id);
+                .map((items, index) => {
+                  const isItemSelected = isSelected(items.id);
                   const labelId = `enhanced-table-checkbox-${index}`;
 
                   return (
                     <TableRow
                       hover
-                    //   onClick={(event) => handleClick(event, row.id)}
                       role="checkbox"
-                       aria-checked={isItemSelected}
+                      aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row.id}
-                       selected={isItemSelected}
+                      key={items.id}
+                      selected={isItemSelected}
                     >
                       <TableCell padding="checkbox">
                         <Checkbox
                           color="primary"
                           checked={isItemSelected}
-                          onClick={(event) => handleClick(event, row.id)}
+                          onClick={(event) => handleClick(event, items.id)}
                           inputProps={{
                             "aria-labelledby": labelId,
                           }}
@@ -193,13 +217,32 @@ export default function SentBox() {
                       <TableCell
                         component="th"
                         id={labelId}
-                        scope="row"
+                        scope="items"
                         padding="none"
                       >
-                        {row.senderEmail}
+                        To: {items.receiverEmail}
                       </TableCell>
-                      <TableCell align="left">{row.subject}</TableCell>
-                      <TableCell align="left">{row.mailContent}</TableCell>
+                      <TableCell align="left">{items.subject}</TableCell>
+                      <TableCell align="left">
+                        {
+                          <Button onClick={() => messageSentBoxHandler(items)}>
+                            see messge
+                          </Button>
+                        }
+                      </TableCell>
+                      <TableCell align="right">{items.DateAndTime}</TableCell>
+                      <TableCell align="right">
+                        {" "}
+                        {isItemSelected ? (
+                          <Tooltip title="Delete">
+                            <IconButton
+                              onClick={() => sentboxDeleteHandler(items.key)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        ) : null}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -225,6 +268,8 @@ export default function SentBox() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+
+      {messageBoxOpen && <MessageBox />}
     </Box>
   );
 }

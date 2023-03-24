@@ -138,7 +138,7 @@ function Header() {
                     marginTop: "8px",
                   }}
                 >
-                  {userData && "Welcome " + userName}
+                  {userData ? "Welcome " + userName : null}
                 </div>
 
                 {!userData && (

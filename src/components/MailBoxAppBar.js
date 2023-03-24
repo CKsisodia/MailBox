@@ -108,9 +108,9 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-
 export default function MailBoxAppBar() {
   const userData = useSelector((state) => state.user.getUserData);
+  const inBoxLength = useSelector((state) => state.mailBox.inBox);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const theme = useTheme();
@@ -124,7 +124,6 @@ export default function MailBoxAppBar() {
 
   const [showInbox, setShowInbox] = React.useState(false);
   const [showSentbox, setShowSentbox] = React.useState(false);
-
 
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -148,17 +147,37 @@ export default function MailBoxAppBar() {
     navigate("/");
   };
 
+  const currentDate = new Date();
+  const day = currentDate.getDate();
+  const month = currentDate.toLocaleString("default", { month: "short" });
+  const year = currentDate.getFullYear();
+  const hour = currentDate.getHours();
+  const minute = currentDate.getMinutes();
+  const AmPm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  const time = `${hour12}:${minute} ${AmPm}`;
+  const DateAndTime = `${day}/${month}/${year} ,  ${time}`;
+
   const sendMailButtonHandler = () => {
-    const mailData = {
-      id:Math.floor(Math.random()*10000),
+    const mailDataForSentbox = {
+      id: Math.floor(Math.random() * 10000),
+      DateAndTime: DateAndTime,
+      senderEmail: userData.email,
+      receiverEmail: mailTo,
+      subject: subject,
+      mailContent: mailContent,
+    };
+    const mailDataForInbox = {
+      id: Math.floor(Math.random() * 10000),
+      DateAndTime: DateAndTime,
       senderEmail: userData.email,
       receiverEmail: mailTo,
       subject: subject,
       mailContent: mailContent,
     };
 
-    dispatch(sendMailAction(mailData));
-    dispatch(receiveMailAction(mailData));
+    dispatch(sendMailAction(mailDataForSentbox));
+    dispatch(receiveMailAction(mailDataForInbox));
 
     setTimeout(() => {
       dispatch(getMailAction(userData.email));
@@ -267,7 +286,11 @@ export default function MailBoxAppBar() {
         </List>
 
         <List>
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => setShowInbox(prev => !prev)}>
+          <ListItem
+            disablePadding
+            sx={{ display: "block" }}
+            onClick={() => setShowInbox((prev)=> !prev)}
+          >
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -284,7 +307,13 @@ export default function MailBoxAppBar() {
               >
                 <InboxIcon />
               </ListItemIcon>
-              <ListItemText sx={{ opacity: open ? 1 : 0 }}>Inbox</ListItemText>
+              <ListItemText sx={{ opacity: open ? 1 : 0 }}>
+                <span
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span>Inbox</span> <span style={{fontWeight:700}}>{inBoxLength.length}</span>
+                </span>
+              </ListItemText> 
             </ListItemButton>
           </ListItem>
 
@@ -311,7 +340,11 @@ export default function MailBoxAppBar() {
             </ListItemButton>
           </ListItem>
 
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => setShowSentbox(prev => !prev)}>
+          <ListItem
+            disablePadding
+            sx={{ display: "block" }}
+            onClick={() => setShowSentbox((prev)=> !prev)}
+          >
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -445,12 +478,14 @@ export default function MailBoxAppBar() {
         </Typography>
 
         <Typography>
-         {showInbox && <Inbox />}
+          {/* {showInbox && <Inbox />} */}
+        
+        {showInbox ? <Inbox /> : null}
+        {showSentbox ? <SentBox /> : null}
+        
         </Typography>
 
-        <Typography>
-        {showSentbox && <SentBox />}
-        </Typography>
+        {/* <Typography>{showSentbox && <SentBox />}</Typography> */}
       </Box>
     </Box>
   );

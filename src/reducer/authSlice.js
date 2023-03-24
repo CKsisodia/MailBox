@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserDataAction, loginUserAction } from "./asyncAuth";
+import { getUserDataAction, loginUserAction, updateProfileAction } from "./asyncAuth";
 
 const authSlice = createSlice({
   name: "user",
